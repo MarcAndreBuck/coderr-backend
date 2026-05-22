@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from auth_app.api.permissions import IsProfileOwnerOrReadOnly
 from auth_app.models import UserProfile
-from auth_app.api.serializers import ProfileSerializer, RegisterSerializer
+from auth_app.api.serializers import BusinessProfileListSerializer, CustomerProfileListSerializer, ProfileDetailSerializer, RegisterSerializer
 
 
 class RegistrationView(APIView):
@@ -48,16 +48,30 @@ class ProfileView(APIView):
 
     def get(self, request, pk):
         profile = get_object_or_404(UserProfile, user_id=pk)
-        serializer = ProfileSerializer(profile)
+        serializer = ProfileDetailSerializer(profile)
         return Response(serializer.data)
 
     def patch(self, request, pk):
         profile = get_object_or_404(UserProfile, user_id=pk)
         self.check_object_permissions(request, profile)
 
-        serializer = ProfileSerializer(
+        serializer = ProfileDetailSerializer(
             profile, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BusinessProfileListView(APIView):
+    def get(self, request):
+        profiles = UserProfile.objects.filter(user_type="business")
+        serializer = BusinessProfileListSerializer(profiles, many=True)
+        return Response(serializer.data)
+
+
+class CustomerProfileListView(APIView):
+    def get(self, request):
+        profiles = UserProfile.objects.filter(user_type="customer")
+        serializer = CustomerProfileListSerializer(profiles, many=True)
+        return Response(serializer.data)

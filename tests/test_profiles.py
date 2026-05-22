@@ -51,7 +51,8 @@ class ProfileTests(APITestCase):
 
         self.client.force_authenticate(user=user)
 
-        response = self.client.patch(f"/api/profile/{user.id}/", payload, format="json")
+        response = self.client.patch(
+            f"/api/profile/{user.id}/", payload, format="json")
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["first_name"], payload["first_name"])
@@ -68,12 +69,51 @@ class ProfileTests(APITestCase):
         self.assertEqual(profile.last_name, payload["last_name"])
         self.assertEqual(profile.location, payload["location"])
 
-
     def test_user_cannot_update_other_profile(self):
         pass
 
     def test_user_can_list_business_profiles(self):
-        pass
+        customer = User.objects.create_user(
+            username="customer_user",
+            email="customer@example.com",
+            password="TestPassword123!",
+        )
+        business = User.objects.create_user(
+            username="business_user",
+            email="business@example.com",
+            password="TestPassword123!",
+        )
+        UserProfile.objects.create(user=customer, user_type="customer")
+        UserProfile.objects.create(user=business, user_type="business")
+
+        self.client.force_authenticate(user=customer)
+
+        response = self.client.get("/api/profiles/business/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["type"], "business")
+        self.assertEqual(response.data[0]["username"], "business_user")
 
     def test_user_can_list_customer_profiles(self):
-        pass
+        customer = User.objects.create_user(
+            username="customer_user",
+            email="customer@example.com",
+            password="TestPassword123!",
+        )
+        business = User.objects.create_user(
+            username="business_user",
+            email="business@example.com",
+            password="TestPassword123!",
+        )
+        UserProfile.objects.create(user=customer, user_type="customer")
+        UserProfile.objects.create(user=business, user_type="business")
+
+        self.client.force_authenticate(user=business)
+
+        response = self.client.get("/api/profiles/customer/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["type"], "customer")
+        self.assertEqual(response.data[0]["username"], "customer_user")
