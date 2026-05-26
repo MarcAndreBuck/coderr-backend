@@ -20,6 +20,9 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 class OfferSerializer(serializers.ModelSerializer):
     details = OfferDetailSerializer(many=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
+    min_price = serializers.SerializerMethodField()
+    min_delivery_time = serializers.SerializerMethodField()
+    user_details = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
@@ -32,7 +35,30 @@ class OfferSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "details",
+            "min_price",
+            "min_delivery_time",
+            "user_details",
         ]
+
+    def get_min_price(self, obj):
+        prices = obj.details.values_list("price", flat=True)
+        return min(prices) if prices else None
+
+    def get_min_delivery_time(self, obj):
+        delivery_times = obj.details.values_list(
+            "delivery_time_in_days",
+            flat=True,
+        )
+        return min(delivery_times) if delivery_times else None
+
+    def get_user_details(self, obj):
+        profile = obj.user.profile
+
+        return {
+            "first_name": profile.first_name,
+            "last_name": profile.last_name,
+            "username": obj.user.username,
+        }
 
     def create(self, validated_data):
         details_data = validated_data.pop("details")

@@ -105,7 +105,7 @@ class OfferTests(APITestCase):
             "/api/offers/",
             self.get_offer_payload(),
             format="json",
-        )   
+        )
 
         self.assertEqual(
             response.status_code,
@@ -224,3 +224,41 @@ class OfferTests(APITestCase):
             response.status_code,
             status.HTTP_401_UNAUTHORIZED,
         )
+
+    def test_authenticated_user_can_get_offer_detail_item(self):
+        owner = self.create_user_with_profile("business")
+        create_response = self.create_offer(owner)
+        detail_id = create_response.data["details"][0]["id"]
+
+        response = self.client.get(f"/api/offerdetails/{detail_id}/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], detail_id)
+        self.assertEqual(response.data["offer_type"], "basic")
+
+    def test_offer_list_returns_paginated_response(self):
+        response = self.client.get("/api/offers/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("count", response.data)
+        self.assertIn("next", response.data)
+        self.assertIn("previous", response.data)
+        self.assertIn("results", response.data)
+
+    def test_offer_list_can_be_filtered_by_search(self):
+        owner = self.create_user_with_profile("business")
+        self.create_offer(owner)
+
+        response = self.client.get("/api/offers/?search=Website")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)
+
+    def test_offer_list_can_be_filtered_by_creator(self):
+        owner = self.create_user_with_profile("business")
+        self.create_offer(owner)
+
+        response = self.client.get(f"/api/offers/?creator_id={owner.id}")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["count"], 1)

@@ -1,13 +1,34 @@
-from rest_framework import status
-from rest_framework.test import APITestCase
+from django.db.models import Avg
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from auth_app.models import UserProfile
+from offers_app.models import Offer
+from reviews_app.models import Review
 
 
-class BaseInfoTests(APITestCase):
-    def test_anyone_can_get_base_info(self):
-        response = self.client.get("/api/base-info/")
+class BaseInfoView(APIView):
+    permission_classes = [AllowAny]
 
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("review_count", response.data)
-        self.assertIn("average_rating", response.data)
-        self.assertIn("business_profile_count", response.data)
-        self.assertIn("offer_count", response.data)
+    def get(self, request):
+        average_rating = Review.objects.aggregate(
+            average_rating=Avg("rating")
+        )["average_rating"]
+
+        rounded_rating = (
+            round(average_rating, 1)
+            if average_rating
+            else 0
+        )
+
+        return Response(
+            {
+                "review_count": Review.objects.count(),
+                "average_rating": rounded_rating,
+                "business_profile_count": UserProfile.objects.filter(
+                    user_type="business"
+                ).count(),
+                "offer_count": Offer.objects.count(),
+            }
+        )

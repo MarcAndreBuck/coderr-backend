@@ -14,12 +14,8 @@ from reviews_app.models import Review
 
 class ReviewListView(APIView):
     def get(self, request):
-        reviews = Review.objects.all()
-
-        serializer = ReviewSerializer(
-            reviews,
-            many=True,
-        )
+        reviews = self.get_filtered_reviews(request)
+        serializer = ReviewSerializer(reviews, many=True)
 
         return Response(serializer.data)
 
@@ -63,6 +59,24 @@ class ReviewListView(APIView):
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+    def get_filtered_reviews(self, request):
+        reviews = Review.objects.all()
+
+        business_user_id = request.query_params.get("business_user_id")
+        reviewer_id = request.query_params.get("reviewer_id")
+        ordering = request.query_params.get("ordering")
+
+        if business_user_id:
+            reviews = reviews.filter(business_user_id=business_user_id)
+
+        if reviewer_id:
+            reviews = reviews.filter(reviewer_id=reviewer_id)
+
+        if ordering in ["updated_at", "-updated_at", "rating", "-rating"]:
+            reviews = reviews.order_by(ordering)
+
+        return reviews
 
 
 class ReviewDetailView(APIView):
