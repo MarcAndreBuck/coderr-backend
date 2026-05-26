@@ -6,6 +6,10 @@ from rest_framework.response import Response
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    """
+    Serializer for user registration.
+    Validates and creates a new user and profile.
+    """
     repeated_password = serializers.CharField(write_only=True)
     type = serializers.ChoiceField(
         choices=["customer", "business"],
@@ -26,11 +30,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, data):
+        """
+        Ensure both passwords match.
+        """
         if data["password"] != data["repeated_password"]:
             raise serializers.ValidationError("Passwords do not match.")
         return data
 
     def create(self, validated_data):
+        """
+        Create a new user and associated profile.
+        """
         user = User.objects.create_user(
             username=validated_data["username"],
             email=validated_data["email"],
@@ -44,6 +54,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class ProfileDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for detailed user profile information.
+    """
     username = serializers.CharField(source="user.username", read_only=True)
     email = serializers.EmailField(source="user.email", read_only=True)
     type = serializers.CharField(source="user_type", read_only=True)
@@ -70,6 +83,9 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
 
 
 class BusinessProfileListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing business user profiles.
+    """
     username = serializers.CharField(source="user.username", read_only=True)
     type = serializers.CharField(source="user_type", read_only=True)
 
@@ -90,6 +106,9 @@ class BusinessProfileListSerializer(serializers.ModelSerializer):
 
 
 class CustomerProfileListSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing customer user profiles.
+    """
     username = serializers.CharField(source="user.username", read_only=True)
     type = serializers.CharField(source="user_type", read_only=True)
     uploaded_at = serializers.DateTimeField(

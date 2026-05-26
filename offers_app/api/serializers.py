@@ -4,6 +4,9 @@ from offers_app.models import Offer, OfferDetail
 
 
 class OfferDetailSerializer(serializers.ModelSerializer):
+    """
+    Serializer for offer detail (pricing tier).
+    """
     class Meta:
         model = OfferDetail
         fields = [
@@ -18,6 +21,9 @@ class OfferDetailSerializer(serializers.ModelSerializer):
 
 
 class OfferSerializer(serializers.ModelSerializer):
+    """
+    Serializer for offers with nested details and user info.
+    """
     details = OfferDetailSerializer(many=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     min_price = serializers.SerializerMethodField()
@@ -41,10 +47,16 @@ class OfferSerializer(serializers.ModelSerializer):
         ]
 
     def get_min_price(self, obj):
+        """
+        Return the minimum price among offer details.
+        """
         prices = obj.details.values_list("price", flat=True)
         return min(prices) if prices else None
 
     def get_min_delivery_time(self, obj):
+        """
+        Return the minimum delivery time among offer details.
+        """
         delivery_times = obj.details.values_list(
             "delivery_time_in_days",
             flat=True,

@@ -3,6 +3,9 @@ from django.db import models
 
 
 class Offer(models.Model):
+    """
+    Model representing a business offer.
+    """
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -19,10 +22,16 @@ class Offer(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        """
+        Return string representation of the offer.
+        """
         return self.title
 
 
 class OfferDetail(models.Model):
+    """
+    Model representing a pricing tier for an offer.
+    """
     OFFER_TYPE_CHOICES = (
         ("basic", "Basic"),
         ("standard", "Standard"),
@@ -45,4 +54,7 @@ class OfferDetail(models.Model):
     )
 
     def __str__(self):
+        """
+        Return string representation of the offer detail.
+        """
         return f"{self.offer.title} - {self.offer_type}"

@@ -10,9 +10,16 @@ from offers_app.models import Offer, OfferDetail
 
 
 class OfferListView(APIView):
+    """
+    API view for listing and creating offers.
+    GET returns offers, POST creates a new offer.
+    """
     permission_classes = [IsBusinessUserOrReadOnly]
 
     def get(self, request):
+        """
+        Return a paginated list of offers, optionally filtered.
+        """
         offers = self.get_filtered_offers(request)
         page = self.paginate_offers(request, offers)
 
@@ -25,6 +32,9 @@ class OfferListView(APIView):
         return self.get_paginated_response(request, offers, serializer.data)
 
     def post(self, request):
+        """
+        Create a new offer for the authenticated business user.
+        """
         serializer = OfferSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -41,6 +51,9 @@ class OfferListView(APIView):
         )
 
     def get_filtered_offers(self, request):
+        """
+        Return offers filtered by creator, search, ordering, min price, and max delivery time.
+        """
         offers = Offer.objects.all()
 
         creator_id = request.query_params.get("creator_id")
@@ -69,6 +82,9 @@ class OfferListView(APIView):
         return offers.distinct()
 
     def filter_by_min_price(self, request, offers):
+        """
+        Filter offers by minimum price if provided in query params.
+        """
         min_price = request.query_params.get("min_price")
 
         if not min_price:
@@ -77,6 +93,9 @@ class OfferListView(APIView):
         return offers.filter(details__price__gte=min_price)
 
     def filter_by_max_delivery_time(self, request, offers):
+        """
+        Filter offers by maximum delivery time if provided in query params.
+        """
         max_delivery_time = request.query_params.get("max_delivery_time")
 
         if not max_delivery_time:

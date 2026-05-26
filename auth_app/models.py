@@ -3,6 +3,9 @@ from django.db import models
 
 
 class UserProfile(models.Model):
+    """
+    Model representing a user profile with additional information.
+    """
     USER_TYPE_CHOICES = (
         ("customer", "Customer"),
         ("business", "Business"),
@@ -23,4 +26,7 @@ class UserProfile(models.Model):
     working_hours = models.CharField(max_length=100, blank=True, default="")
 
     def __str__(self):
+        """
+        Return string representation of the user profile.
+        """
         return f"{self.user.username} - {self.user_type}"

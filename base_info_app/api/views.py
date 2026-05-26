@@ -9,9 +9,15 @@ from reviews_app.models import Review
 
 
 class BaseInfoView(APIView):
+    """
+    API view for platform statistics and base info.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request):
+        """
+        Return platform statistics: review count, average rating, business profile count, offer count.
+        """
         average_rating = Review.objects.aggregate(
             average_rating=Avg("rating")
         )["average_rating"]

@@ -6,8 +6,14 @@ from auth_app.models import UserProfile
 
 
 class OfferTests(APITestCase):
+    """
+    Test cases for offer endpoints.
+    """
 
     def create_user_with_profile(self, user_type="business"):
+        """
+        Create and return a user with profile of given type.
+        """
         user = User.objects.create_user(
             username=f"{user_type}_user_{User.objects.count()}",
             email=f"{user_type}_{User.objects.count()}@example.com",
@@ -22,6 +28,9 @@ class OfferTests(APITestCase):
         return user
 
     def get_offer_payload(self):
+        """
+        Return a sample offer payload with all pricing tiers.
+        """
         return {
             "title": "Website Design",
             "image": None,
@@ -62,6 +71,9 @@ class OfferTests(APITestCase):
         }
 
     def create_offer(self, user):
+        """
+        Create an offer for the given user via API.
+        """
         self.client.force_authenticate(user=user)
 
         response = self.client.post(

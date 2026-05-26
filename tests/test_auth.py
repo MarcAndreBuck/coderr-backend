@@ -4,7 +4,13 @@ from rest_framework.test import APITestCase
 
 
 class AuthTests(APITestCase):
+    """
+    Test cases for authentication endpoints.
+    """
     def get_registration_payload(self, user_type="customer"):
+        """
+        Return registration payload for given user type.
+        """
         return {
             "username": f"{user_type}_user",
             "email": f"{user_type}@example.com",
@@ -14,6 +20,9 @@ class AuthTests(APITestCase):
         }
 
     def register_user(self, payload=None):
+        """
+        Register a user via API and return response.
+        """
         return self.client.post(
             "/api/registration/",
             payload or self.get_registration_payload(),

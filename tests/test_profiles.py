@@ -6,6 +6,9 @@ from auth_app.models import UserProfile
 
 
 class ProfileTests(APITestCase):
+    """
+    Test cases for profile endpoints.
+    """
     def test_user_can_get_profile(self):
         user = User.objects.create_user(
             username="customer_user",

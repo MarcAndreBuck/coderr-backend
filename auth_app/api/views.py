@@ -12,9 +12,16 @@ from auth_app.api.serializers import BusinessProfileListSerializer, CustomerProf
 
 
 class RegistrationView(APIView):
+    """
+    API view for user registration.
+    Handles POST requests to create a new user and profile.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Register a new user and return authentication token.
+        """
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
@@ -28,9 +35,16 @@ class RegistrationView(APIView):
 
 
 class LoginView(APIView):
+    """
+    API view for user login.
+    Handles POST requests to authenticate and return a token.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request):
+        """
+        Authenticate user and return authentication token.
+        """
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(request, username=username, password=password)
@@ -44,14 +58,24 @@ class LoginView(APIView):
 
 
 class ProfileView(APIView):
+    """
+    API view for retrieving and updating user profiles.
+    GET returns profile data, PATCH updates own profile.
+    """
     permission_classes = [IsProfileOwnerOrReadOnly]
 
     def get(self, request, pk):
+        """
+        Retrieve profile details for a given user id.
+        """
         profile = get_object_or_404(UserProfile, user_id=pk)
         serializer = ProfileDetailSerializer(profile)
         return Response(serializer.data)
 
     def patch(self, request, pk):
+        """
+        Update profile details for the authenticated user.
+        """
         profile = get_object_or_404(UserProfile, user_id=pk)
         self.check_object_permissions(request, profile)
 
@@ -64,14 +88,26 @@ class ProfileView(APIView):
 
 
 class BusinessProfileListView(APIView):
+    """
+    API view to list all business user profiles.
+    """
     def get(self, request):
+        """
+        Return a list of all business profiles.
+        """
         profiles = UserProfile.objects.filter(user_type="business")
         serializer = BusinessProfileListSerializer(profiles, many=True)
         return Response(serializer.data)
 
 
 class CustomerProfileListView(APIView):
+    """
+    API view to list all customer user profiles.
+    """
     def get(self, request):
+        """
+        Return a list of all customer profiles.
+        """
         profiles = UserProfile.objects.filter(user_type="customer")
         serializer = CustomerProfileListSerializer(profiles, many=True)
         return Response(serializer.data)
