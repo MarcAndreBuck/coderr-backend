@@ -35,10 +35,13 @@ class OrderListView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        offer_detail = get_object_or_404(
-            OfferDetail,
-            pk=offer_detail_id,
-        )
+        try:
+            offer_detail = OfferDetail.objects.get(pk=offer_detail_id)
+        except (OfferDetail.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {"detail": "Invalid offer_detail_id."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         order = Order.objects.create(
             customer_user=request.user,

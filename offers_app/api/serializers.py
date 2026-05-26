@@ -84,3 +84,30 @@ class OfferSerializer(serializers.ModelSerializer):
             )
 
         return offer
+
+    def update(self, instance, validated_data):
+        details_data = validated_data.pop("details", None)
+
+        instance = super().update(instance, validated_data)
+
+        if details_data:
+            self.update_offer_details(instance, details_data)
+
+        return instance
+
+    def update_offer_details(self, offer, details_data):
+        for detail_data in details_data:
+            offer_type = detail_data.get("offer_type")
+
+            detail = offer.details.filter(
+                offer_type=offer_type,
+            ).first()
+
+            if detail:
+                self.update_single_detail(detail, detail_data)
+
+    def update_single_detail(self, detail, detail_data):
+        for field, value in detail_data.items():
+            setattr(detail, field, value)
+
+        detail.save()
