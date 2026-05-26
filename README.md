@@ -1,7 +1,3 @@
-
-![Coverage](https://img.shields.io/badge/coverage-98%25-brightgreen)
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
-
 # Coderr Backend API
 
 Backend API for Coderr, a Fiverr-like freelance marketplace built with Django and Django REST Framework as part of the Developer Akademie backend course.
