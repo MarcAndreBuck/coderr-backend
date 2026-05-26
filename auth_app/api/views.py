@@ -3,6 +3,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from django.shortcuts import get_object_or_404
 
@@ -62,7 +63,7 @@ class ProfileView(APIView):
     API view for retrieving and updating user profiles.
     GET returns profile data, PATCH updates own profile.
     """
-    permission_classes = [IsProfileOwnerOrReadOnly]
+    permission_classes = [IsAuthenticated, IsProfileOwnerOrReadOnly]
 
     def get(self, request, pk):
         """
@@ -91,6 +92,8 @@ class BusinessProfileListView(APIView):
     """
     API view to list all business user profiles.
     """
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """
         Return a list of all business profiles.
@@ -104,6 +107,8 @@ class CustomerProfileListView(APIView):
     """
     API view to list all customer user profiles.
     """
+    permission_classes = [IsAuthenticated]
+
     def get(self, request):
         """
         Return a list of all customer profiles.

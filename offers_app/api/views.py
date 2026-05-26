@@ -1,6 +1,7 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from django.shortcuts import get_object_or_404
 
@@ -17,11 +18,14 @@ class OfferListView(APIView):
     permission_classes = [IsBusinessUserOrReadOnly]
 
     def get(self, request):
-        """
-        Return a paginated list of offers, optionally filtered.
-        """
-        offers = self.get_filtered_offers(request)
-        page = self.paginate_offers(request, offers)
+        try:
+            offers = self.get_filtered_offers(request)
+            page = self.paginate_offers(request, offers)
+        except ValueError:
+            return Response(
+                {"detail": "Invalid query parameter."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         serializer = OfferSerializer(
             page,
@@ -29,7 +33,33 @@ class OfferListView(APIView):
             context={"request": request},
         )
 
-        return self.get_paginated_response(request, offers, serializer.data)
+        return self.get_paginated_response(
+            request,
+            offers,
+            serializer.data,
+        )
+
+    def get_positive_int_param(
+        self,
+        request,
+        name,
+        default=None,
+    ):
+        value = request.query_params.get(name, default)
+
+        if value is None:
+            return None
+
+        try:
+            value = int(value)
+
+            if value < 1:
+                raise ValueError
+
+            return value
+
+        except (TypeError, ValueError):
+            raise ValueError(name)
 
     def post(self, request):
         """
@@ -82,21 +112,23 @@ class OfferListView(APIView):
         return offers.distinct()
 
     def filter_by_min_price(self, request, offers):
-        """
-        Filter offers by minimum price if provided in query params.
-        """
         min_price = request.query_params.get("min_price")
 
         if not min_price:
             return offers
 
+        try:
+            min_price = float(min_price)
+        except ValueError:
+            raise ValueError("Invalid min price")
+
         return offers.filter(details__price__gte=min_price)
 
     def filter_by_max_delivery_time(self, request, offers):
-        """
-        Filter offers by maximum delivery time if provided in query params.
-        """
-        max_delivery_time = request.query_params.get("max_delivery_time")
+        max_delivery_time = self.get_positive_int_param(
+            request,
+            "max_delivery_time",
+        )
 
         if not max_delivery_time:
             return offers
@@ -106,22 +138,44 @@ class OfferListView(APIView):
         )
 
     def paginate_offers(self, request, offers):
-        page_size = int(request.query_params.get("page_size", 6))
-        page_number = int(request.query_params.get("page", 1))
+        page_size = self.get_positive_int_param(
+            request,
+            "page_size",
+            6,
+        )
+        page_number = self.get_positive_int_param(
+            request,
+            "page",
+            1,
+        )
+
         start_index = (page_number - 1) * page_size
         end_index = start_index + page_size
 
         return offers[start_index:end_index]
 
     def get_paginated_response(self, request, offers, results):
-        page_size = int(request.query_params.get("page_size", 6))
-        page_number = int(request.query_params.get("page", 1))
+        page_size = self.get_positive_int_param(
+            request,
+            "page_size",
+            6,
+        )
+        page_number = self.get_positive_int_param(
+            request,
+            "page",
+            1,
+        )
         total_count = offers.count()
 
         return Response(
             {
                 "count": total_count,
-                "next": self.get_next_url(request, page_number, page_size, total_count),
+                "next": self.get_next_url(
+                    request,
+                    page_number,
+                    page_size,
+                    total_count,
+                ),
                 "previous": self.get_previous_url(request, page_number),
                 "results": results,
             }
@@ -149,7 +203,7 @@ class OfferListView(APIView):
 
 
 class OfferDetailView(APIView):
-    permission_classes = [IsBusinessUserOrReadOnly]
+    permission_classes = [IsAuthenticated, IsBusinessUserOrReadOnly]
 
     def get(self, request, pk):
         offer = get_object_or_404(Offer, pk=pk)
@@ -161,7 +215,10 @@ class OfferDetailView(APIView):
         offer = get_object_or_404(Offer, pk=pk)
 
         if offer.user != request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You are not allowed to modify this offer."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         serializer = OfferSerializer(
             offer,
@@ -183,7 +240,10 @@ class OfferDetailView(APIView):
         offer = get_object_or_404(Offer, pk=pk)
 
         if offer.user != request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You are not allowed to modify this offer."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         offer.delete()
 
@@ -191,6 +251,8 @@ class OfferDetailView(APIView):
 
 
 class OfferDetailItemView(APIView):
+    permission_classes = [IsAuthenticated]
+
     def get(self, request, pk):
         detail = get_object_or_404(OfferDetail, pk=pk)
         serializer = OfferDetailSerializer(detail)

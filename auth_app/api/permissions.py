@@ -3,8 +3,9 @@ from rest_framework.permissions import BasePermission
 
 class IsProfileOwnerOrReadOnly(BasePermission):
     """
-    Permission: Allow read for anyone, write only for profile owner.
+    Allow read requests for authenticated users and write requests only for profile owners.
     """
+
     def has_object_permission(self, request, view, obj):
         """
         Grant access if read or user owns the profile.

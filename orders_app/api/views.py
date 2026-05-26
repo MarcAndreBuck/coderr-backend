@@ -3,6 +3,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from auth_app.models import UserProfile
 from offers_app.models import OfferDetail
 from orders_app.api.serializers import OrderSerializer
 from orders_app.models import Order
@@ -17,16 +18,26 @@ class OrderListView(APIView):
         )
 
         serializer = OrderSerializer(orders, many=True)
-
         return Response(serializer.data)
 
     def post(self, request):
         if request.user.profile.user_type != "customer":
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Only customers can create orders."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        offer_detail_id = request.data.get("offer_detail_id")
+
+        if not offer_detail_id:
+            return Response(
+                {"detail": "offer_detail_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         offer_detail = get_object_or_404(
             OfferDetail,
-            pk=request.data.get("offer_detail_id"),
+            pk=offer_detail_id,
         )
 
         order = Order.objects.create(
@@ -41,7 +52,6 @@ class OrderListView(APIView):
         )
 
         serializer = OrderSerializer(order)
-
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -50,7 +60,10 @@ class OrderDetailView(APIView):
         order = get_object_or_404(Order, pk=pk)
 
         if request.user != order.business_user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "You are not allowed to update this order."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         serializer = OrderSerializer(
             order,
@@ -62,13 +75,19 @@ class OrderDetailView(APIView):
             serializer.save()
             return Response(serializer.data)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     def delete(self, request, pk):
         order = get_object_or_404(Order, pk=pk)
 
         if not request.user.is_staff:
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(
+                {"detail": "Only staff users can delete orders."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         order.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -76,8 +95,14 @@ class OrderDetailView(APIView):
 
 class OrderCountView(APIView):
     def get(self, request, business_user_id):
+        profile = get_object_or_404(
+            UserProfile,
+            user_id=business_user_id,
+            user_type="business",
+        )
+
         order_count = Order.objects.filter(
-            business_user_id=business_user_id,
+            business_user=profile.user,
             status="in_progress",
         ).count()
 
@@ -86,8 +111,14 @@ class OrderCountView(APIView):
 
 class CompletedOrderCountView(APIView):
     def get(self, request, business_user_id):
+        profile = get_object_or_404(
+            UserProfile,
+            user_id=business_user_id,
+            user_type="business",
+        )
+
         completed_order_count = Order.objects.filter(
-            business_user_id=business_user_id,
+            business_user=profile.user,
             status="completed",
         ).count()
 

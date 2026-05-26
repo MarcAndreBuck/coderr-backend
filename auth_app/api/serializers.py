@@ -1,8 +1,6 @@
 from django.contrib.auth.models import User
 from auth_app.models import UserProfile
 from rest_framework import serializers
-from rest_framework.views import APIView
-from rest_framework.response import Response
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -57,12 +55,17 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for detailed user profile information.
     """
+
     username = serializers.CharField(source="user.username", read_only=True)
-    email = serializers.EmailField(source="user.email", read_only=True)
+    email = serializers.EmailField(
+        source="user.email",
+        required=False,
+    )
     type = serializers.CharField(source="user_type", read_only=True)
     created_at = serializers.DateTimeField(
         source="user.date_joined",
-        read_only=True,)
+        read_only=True,
+    )
 
     class Meta:
         model = UserProfile
@@ -80,6 +83,18 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
             "working_hours",
             "created_at",
         ]
+
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop("user", None)
+
+        if user_data:
+            instance.user.email = user_data.get(
+                "email",
+                instance.user.email,
+            )
+            instance.user.save()
+
+        return super().update(instance, validated_data)
 
 
 class BusinessProfileListSerializer(serializers.ModelSerializer):
