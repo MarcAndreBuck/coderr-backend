@@ -105,9 +105,7 @@ class OfferTests(APITestCase):
             "/api/offers/",
             self.get_offer_payload(),
             format="json",
-        )
-
-        print(response.data)
+        )   
 
         self.assertEqual(
             response.status_code,
