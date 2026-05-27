@@ -18,6 +18,9 @@ class OfferListView(APIView):
     permission_classes = [IsBusinessUserOrReadOnly]
 
     def get(self, request):
+        """
+        Return a paginated list of offers (with filters and search).
+        """
         try:
             offers = self.get_filtered_offers(request)
             page = self.paginate_offers(request, offers)

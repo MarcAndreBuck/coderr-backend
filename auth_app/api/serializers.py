@@ -85,6 +85,9 @@ class ProfileDetailSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
+        """
+        Update user profile and user email if provided.
+        """
         user_data = validated_data.pop("user", None)
 
         if user_data:

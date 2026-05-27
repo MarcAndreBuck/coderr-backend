@@ -64,6 +64,9 @@ class OfferSerializer(serializers.ModelSerializer):
         return min(delivery_times) if delivery_times else None
 
     def get_user_details(self, obj):
+        """
+        Return user profile details for the offer owner.
+        """
         profile = obj.user.profile
 
         return {

@@ -121,6 +121,9 @@ class ReviewDetailView(APIView):
         )
 
     def delete(self, request, pk):
+        """
+        Delete a review if the user is the reviewer.
+        """
         review = get_object_or_404(Review, pk=pk)
 
         if review.reviewer != request.user:

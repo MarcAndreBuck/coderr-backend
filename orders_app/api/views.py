@@ -138,6 +138,9 @@ class OrderCountView(APIView):
 
 class CompletedOrderCountView(APIView):
     def get(self, request, business_user_id):
+        """
+        Return the number of completed orders for the given business user.
+        """
         profile = get_object_or_404(
             UserProfile,
             user_id=business_user_id,
