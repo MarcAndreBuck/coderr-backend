@@ -4,6 +4,9 @@ from orders_app.models import Order
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    """
+    Serializer for order objects.
+    """
     class Meta:
         model = Order
         fields = [

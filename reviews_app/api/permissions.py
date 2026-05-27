@@ -2,6 +2,9 @@ from rest_framework.permissions import BasePermission
 
 
 class IsCustomerUser(BasePermission):
+    """
+    Permission: Only allow access for authenticated customer users.
+    """
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -11,6 +14,9 @@ class IsCustomerUser(BasePermission):
 
 
 class IsReviewerOrReadOnly(BasePermission):
+    """
+    Permission: Allow read access for anyone, write access only for the reviewer.
+    """
     def has_object_permission(self, request, view, obj):
         if request.method == "GET":
             return True

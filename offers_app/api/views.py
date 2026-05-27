@@ -45,6 +45,11 @@ class OfferListView(APIView):
         name,
         default=None,
     ):
+        """
+        Extracts a positive integer query parameter from the request.
+        Returns None if the parameter is missing.
+        Raises ValueError if the value is invalid.
+        """
         value = request.query_params.get(name, default)
 
         if value is None:
@@ -112,6 +117,10 @@ class OfferListView(APIView):
         return offers.distinct()
 
     def filter_by_min_price(self, request, offers):
+        """
+        Filters offers by a minimum price if provided.
+        Returns the filtered queryset.
+        """
         min_price = request.query_params.get("min_price")
 
         if not min_price:
@@ -125,6 +134,10 @@ class OfferListView(APIView):
         return offers.filter(details__price__gte=min_price)
 
     def filter_by_max_delivery_time(self, request, offers):
+        """
+        Filters offers by a maximum delivery time (in days) if provided.
+        Returns the filtered queryset.
+        """
         max_delivery_time = self.get_positive_int_param(
             request,
             "max_delivery_time",
@@ -138,6 +151,10 @@ class OfferListView(APIView):
         )
 
     def paginate_offers(self, request, offers):
+        """
+        Paginates offers based on page_size and page query parameters.
+        Returns the corresponding page of the queryset.
+        """
         page_size = self.get_positive_int_param(
             request,
             "page_size",
@@ -155,6 +172,10 @@ class OfferListView(APIView):
         return offers[start_index:end_index]
 
     def get_paginated_response(self, request, offers, results):
+        """
+        Creates the paginated response for the offer list.
+        Includes count, next, previous, and results.
+        """
         page_size = self.get_positive_int_param(
             request,
             "page_size",
@@ -182,6 +203,9 @@ class OfferListView(APIView):
         )
 
     def get_next_url(self, request, page_number, page_size, total_count):
+        """
+        Returns the URL for the next page or None if there is no next page.
+        """
         if page_number * page_size >= total_count:
             return None
 
@@ -189,6 +213,9 @@ class OfferListView(APIView):
         return self.build_page_url(request, next_page)
 
     def get_previous_url(self, request, page_number):
+        """
+        Returns the URL for the previous page or None if there is no previous page.
+        """
         if page_number <= 1:
             return None
 
@@ -196,6 +223,9 @@ class OfferListView(APIView):
         return self.build_page_url(request, previous_page)
 
     def build_page_url(self, request, page_number):
+        """
+        Builds an absolute URL for the given page with the current query parameters.
+        """
         query_params = request.query_params.copy()
         query_params["page"] = page_number
 
@@ -206,12 +236,18 @@ class OfferDetailView(APIView):
     permission_classes = [IsAuthenticated, IsBusinessUserOrReadOnly]
 
     def get(self, request, pk):
+        """
+        Returns the details of an offer with the given ID.
+        """
         offer = get_object_or_404(Offer, pk=pk)
         serializer = OfferSerializer(offer)
 
         return Response(serializer.data)
 
     def patch(self, request, pk):
+        """
+        Updates an offer if the user is the owner.
+        """
         offer = get_object_or_404(Offer, pk=pk)
 
         if offer.user != request.user:
@@ -237,6 +273,9 @@ class OfferDetailView(APIView):
         )
 
     def delete(self, request, pk):
+        """
+        Deletes an offer if the user is the owner.
+        """
         offer = get_object_or_404(Offer, pk=pk)
 
         if offer.user != request.user:
@@ -254,6 +293,9 @@ class OfferDetailItemView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, pk):
+        """
+        Returns the details of an OfferDetail object with the given ID.
+        """
         detail = get_object_or_404(OfferDetail, pk=pk)
         serializer = OfferDetailSerializer(detail)
 

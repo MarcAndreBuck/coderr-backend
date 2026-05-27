@@ -10,7 +10,13 @@ from orders_app.models import Order
 
 
 class OrderListView(APIView):
+    """
+    API view for listing and creating orders.
+    """
     def get(self, request):
+        """
+        Return a list of orders for the current user (as customer or business user).
+        """
         orders = Order.objects.filter(
             customer_user=request.user,
         ) | Order.objects.filter(
@@ -21,6 +27,9 @@ class OrderListView(APIView):
         return Response(serializer.data)
 
     def post(self, request):
+        """
+        Create a new order for the authenticated customer user.
+        """
         if request.user.profile.user_type != "customer":
             return Response(
                 {"detail": "Only customers can create orders."},
@@ -59,7 +68,13 @@ class OrderListView(APIView):
 
 
 class OrderDetailView(APIView):
+    """
+    API view for updating and deleting a specific order.
+    """
     def patch(self, request, pk):
+        """
+        Update an order if the user is the business user.
+        """
         order = get_object_or_404(Order, pk=pk)
 
         if request.user != order.business_user:
@@ -84,6 +99,9 @@ class OrderDetailView(APIView):
         )
 
     def delete(self, request, pk):
+        """
+        Delete an order if the user is staff.
+        """
         order = get_object_or_404(Order, pk=pk)
 
         if not request.user.is_staff:
@@ -97,7 +115,13 @@ class OrderDetailView(APIView):
 
 
 class OrderCountView(APIView):
+    """
+    API view for retrieving the count of orders for a business user.
+    """
     def get(self, request, business_user_id):
+        """
+        Return the number of orders for the given business user.
+        """
         profile = get_object_or_404(
             UserProfile,
             user_id=business_user_id,

@@ -3,6 +3,9 @@ from django.db import models
 
 
 class Review(models.Model):
+    """
+    Model representing a review written by a user for a business user.
+    """
     reviewer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -19,7 +22,13 @@ class Review(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
+        """
+        Ensure that each reviewer can only review a business user once.
+        """
         unique_together = ["reviewer", "business_user"]
 
     def __str__(self):
+        """
+        Return string representation of the review.
+        """
         return f"{self.reviewer.username} -> {self.business_user.username} ({self.rating}/5)"

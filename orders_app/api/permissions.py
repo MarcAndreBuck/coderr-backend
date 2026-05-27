@@ -2,6 +2,9 @@ from rest_framework.permissions import BasePermission
 
 
 class IsCustomerUser(BasePermission):
+    """
+    Permission: Only allow access for authenticated customer users.
+    """
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -11,6 +14,9 @@ class IsCustomerUser(BasePermission):
 
 
 class IsBusinessUser(BasePermission):
+    """
+    Permission: Only allow access for authenticated business users.
+    """
     def has_permission(self, request, view):
         return (
             request.user.is_authenticated
@@ -20,5 +26,8 @@ class IsBusinessUser(BasePermission):
 
 
 class IsStaffUser(BasePermission):
+    """
+    Permission: Only allow access for authenticated staff users.
+    """
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_staff

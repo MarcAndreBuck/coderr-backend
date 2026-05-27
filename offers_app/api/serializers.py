@@ -73,41 +73,61 @@ class OfferSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
+        """
+        Create a new Offer instance along with its related OfferDetails.
+        """
         details_data = validated_data.pop("details")
-
         offer = Offer.objects.create(**validated_data)
-
         for detail_data in details_data:
             OfferDetail.objects.create(
                 offer=offer,
                 **detail_data,
             )
-
         return offer
 
     def update(self, instance, validated_data):
+        """
+        Update an existing Offer instance and its related OfferDetails.
+        """
         details_data = validated_data.pop("details", None)
-
         instance = super().update(instance, validated_data)
-
         if details_data:
             self.update_offer_details(instance, details_data)
-
         return instance
 
     def update_offer_details(self, offer, details_data):
+        """
+        Update the OfferDetails for a given Offer instance.
+        """
         for detail_data in details_data:
             offer_type = detail_data.get("offer_type")
-
             detail = offer.details.filter(
                 offer_type=offer_type,
             ).first()
-
             if detail:
                 self.update_single_detail(detail, detail_data)
 
     def update_single_detail(self, detail, detail_data):
+        """
+        Update a single OfferDetail instance with new data.
+        """
         for field, value in detail_data.items():
             setattr(detail, field, value)
-
         detail.save()
+
+    def validate_details(self, details):
+        """
+        Validate that each detail has a valid offer_type.
+        """
+        valid_types = ["basic", "standard", "premium"]
+        for detail in details:
+            offer_type = detail.get("offer_type")
+            if not offer_type:
+                raise serializers.ValidationError(
+                    "offer_type is required for each detail."
+                )
+            if offer_type not in valid_types:
+                raise serializers.ValidationError(
+                    "Invalid offer_type."
+                )
+        return details

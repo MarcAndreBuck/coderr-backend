@@ -3,6 +3,9 @@ from django.db import models
 
 
 class Order(models.Model):
+    """
+    Model representing an order between a customer and a business user.
+    """
     STATUS_CHOICES = (
         ("in_progress", "In Progress"),
         ("completed", "Completed"),
@@ -34,4 +37,7 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
+        """
+        Return string representation of the order.
+        """
         return self.title

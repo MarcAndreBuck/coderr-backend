@@ -13,13 +13,22 @@ from reviews_app.models import Review
 
 
 class ReviewListView(APIView):
+    """
+    API view for listing and creating reviews.
+    """
     def get(self, request):
+        """
+        Return a list of reviews, optionally filtered by business user, reviewer, or ordering.
+        """
         reviews = self.get_filtered_reviews(request)
         serializer = ReviewSerializer(reviews, many=True)
 
         return Response(serializer.data)
 
     def post(self, request):
+        """
+        Create a new review for a business user if the customer has a completed order and has not already reviewed.
+        """
         if request.user.profile.user_type != "customer":
             return Response(status=status.HTTP_403_FORBIDDEN)
 
@@ -61,6 +70,9 @@ class ReviewListView(APIView):
         )
 
     def get_filtered_reviews(self, request):
+        """
+        Return reviews filtered by query parameters.
+        """
         reviews = Review.objects.all()
 
         business_user_id = request.query_params.get("business_user_id")
@@ -80,7 +92,13 @@ class ReviewListView(APIView):
 
 
 class ReviewDetailView(APIView):
+    """
+    API view for updating a specific review.
+    """
     def patch(self, request, pk):
+        """
+        Update a review if the user is the reviewer.
+        """
         review = get_object_or_404(Review, pk=pk)
 
         if review.reviewer != request.user:
